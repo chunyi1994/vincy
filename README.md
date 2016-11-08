@@ -31,5 +31,5 @@ vincy是一个c++ web框架. python-flask和go语言的web框架都非常简洁�
 
 模板引擎的语法如下:
     // {% for item in titles %} <a href="{{ item.url }}"> {{ item.title }}</a> {% endfor %}
-    //<h1>我的名字是{{ myname }}</h1>
-    //<h1>我的密码是{{ mypassword }}</h1>
+    //我的名字是{{ myname }}
+    //我的密码是{{ mypassword }}
