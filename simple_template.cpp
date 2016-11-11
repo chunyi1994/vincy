@@ -24,6 +24,20 @@ SimpleTemplate::SimpleTemplate(const std::string &filename) :
 
 }
 
+bool SimpleTemplate::operator!() const
+{
+   return ! operator bool();
+}
+
+vincy::SimpleTemplate::operator bool() const
+{
+    if(ifs_){
+        return true;
+    }else{
+        return false;
+    }
+}
+
 
 SimpleTemplate::~SimpleTemplate()
 {

@@ -6,11 +6,12 @@
 namespace vincy {
 
 class HttpRequest;
+class HttpResponse;
 
 class HttpHandler
 {
 public:
-    typedef std::function<std::string(HttpRequest&)> HandleFunc;
+    typedef std::function<std::string(HttpRequest&, HttpResponse&)> HandleFunc;
 public:
     HttpHandler();
     void setHandleFunc(const std::string& path, const HandleFunc& func);

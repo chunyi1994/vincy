@@ -5,6 +5,7 @@
 #include "log.h"
 #include "utils.h"
 #include "http_utils.h"
+#include "simple_template.h"
 
 namespace vincy {
 
@@ -47,7 +48,7 @@ void HttpServer::handleClose(TcpConnection::Pointer conn)
 void sendFile(TcpConnection::Pointer conn, int fd){
     char buf[1024];
     int n = 0;
-    while(1){
+    while(1) {
         n = read(fd, buf, sizeof(buf));
         if(n <= 0)break;
         std::string msg(buf, n);
@@ -57,11 +58,60 @@ void sendFile(TcpConnection::Pointer conn, int fd){
 
 void send404(TcpConnection::Pointer conn)
 {
-    HttpMessage response;
+    HttpResponse response;
     response.setStatusLine("HTTP/1.1", 404, "NOT FOUND");
-    std::string sendMsg("no page!");
+    std::string sendMsg("404 not found!");
+    //如果模板有404.html，就读取这里面的
+    SimpleTemplate t("404.html");
+    if(t)
+    {
+        sendMsg = t.toString();
+    }
     response["Content-Length"]  = int2string(sendMsg.length());
     conn->send(response.toString());
+    conn->send("\r\n");
+    conn->send(sendMsg);
+}
+
+void checkIfNewSession(HttpRequest& request, HttpResponse& response)
+{
+    std::string sessionIdStr = request.cookie("sessionid");
+    if(gSessionManager.sessionId(sessionIdStr) == -1)
+    {
+        std::string newSession = gSessionManager.newSession();
+        request.setCookie("sessionid", newSession);
+        response.setCookie("sessionid", newSession);
+    }
+}
+
+void sendStaticFile(TcpConnection::Pointer conn, std::string& path , HttpResponse& response)
+{
+    path = path.substr(1, path.length() - 1);
+
+    int fd = open(path.c_str(), O_RDONLY);
+    if(fd == -1){
+        send404(conn);
+        return;
+    }
+    response.setStatusLine("HTTP/1.1", 200, "OK");
+    response["Content-Type"] = contentType(path);
+    response["Content-Length"] = int2string(getFileSize(path.c_str()));
+    conn->send(response.toString());
+    conn->send("\r\n");
+    sendFile(conn, fd);
+    close(fd);
+}
+
+void sendFunctionResult(TcpConnection::Pointer conn,
+                        HttpResponse& response, HttpRequest& request,
+                        HttpHandler::HandleFunc& handleFunction)
+{
+    response.setStatusLine("HTTP/1.1", 200, "OK");
+    checkIfNewSession(request, response);
+    std::string sendMsg = std::move(handleFunction(request, response));
+    response["Content-Length"] = int2string(sendMsg.length());
+    conn->send(response.toString());
+    conn->send("\r\n");
     conn->send(sendMsg);
 }
 
@@ -77,30 +127,15 @@ void HttpServer::handleRead(TcpConnection::Pointer conn, std::size_t bytes_trans
     //如果是访问静态文件,则读取文件,返回
     if(beginWith(path, "/static"))
     {
-        path = path.substr(1, path.length() - 1);
-
-        int fd = open(path.c_str(), O_RDONLY);
-        if(fd == -1){
-            send404(conn);
-            return;
-        }
-        response.setStatusLine("HTTP/1.1", 200, "OK");
-        response["Content-Type"] = contentType(path);
-        response["Content-Length"] = int2string(getFileSize(path.c_str()));
-        conn->send(response.toString());
-        sendFile(conn, fd);
-        close(fd);
+        sendStaticFile(conn, path, response);
         return;
     }
     //如果访问的是记录在案的路由地址,则调用function
     HttpHandler::HandleFunc handleFunction = handler_.getHandleFunc(path);
     if(handleFunction)
     {
-        response.setStatusLine("HTTP/1.1", 200, "OK");
-        std::string sendMsg = std::move(handleFunction(request));
-        response["Content-Length"] = int2string(sendMsg.length());
-        conn->send(response.toString());
-        conn->send(sendMsg);
+        request.parseCookie();
+        sendFunctionResult(conn, response,  request, handleFunction);
     }
     else
     {

@@ -8,7 +8,9 @@
 
 #include "tcp_connection.h"
 #include "http_handler.h"
-#include "http_message.h"
+#include "http_response.h"
+#include "http_request.h"
+#include "session_manager.h"
 namespace vincy {
 
 //using boost::asio::ip::tcp::acceptor;
@@ -33,6 +35,13 @@ private:
     HttpHandler handler_;
 
 };
+
+static std::string redirect(const std::string& path)
+{
+    std::string ret = "<head><meta http-equiv=\"refresh\" content=\"0; url=" + path + "\"></head>";
+    return ret;
+}
+
 
 }
 

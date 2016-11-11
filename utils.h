@@ -54,6 +54,18 @@ static bool trim(std::string& str)
     return true;
 }
 
+static bool trimQuo(std::string& str)
+{
+    if (str.empty())
+    {
+        return false;
+    }
+
+    str.erase(0, str.find_first_not_of("\""));
+    str.erase( str.find_last_not_of("\"") + 1);
+    return true;
+}
+
 static bool beginWith(const std::string& src, const std::string& dest)
 {
     if(dest.length() > src.length())
@@ -156,6 +168,27 @@ static void parseUrl(const std::string& url, std::string& host, std::string& pat
         path = url.substr(pos2, url.length() - pos2);
     }
 
+}
+
+
+static bool isDigit(const std::string &str){
+    if(str.length() == 0){
+        return false;
+    }
+    if('0' > str[0] || '9'< str[0]){
+        if(str[0] != '+' && str[0] != '-'){
+            return false;
+        }
+    }
+    for(size_t i = 1; i < str.length(); i++){
+        if('0' <=str[i] && str[i] <= '9'){
+            continue;
+        }else{
+            return false;
+        }
+    }
+
+    return true;
 }
 }
 

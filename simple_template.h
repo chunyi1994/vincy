@@ -15,6 +15,8 @@ public:
     SimpleTemplate();
     ~SimpleTemplate();
     SimpleTemplate(const std::string& filename);
+    bool operator!() const ;
+    operator bool() const;
     void open(const std::string& filename);
 
     std::string toString();
@@ -30,7 +32,6 @@ private:
     std::map<std::string, ForLoopVector> forLoopValues_;
 
 };
-
 }
 #endif // SIMPLETEMPLATE_H
 
