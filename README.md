@@ -23,7 +23,7 @@ vincy是一个c++ web框架. python-flask和go语言的web框架都非常简洁�
     
     这样就完成了/目录的注册, 接下来编写handleIndex函数
     
-    std::string handleIndex(HttpRequest& r)
+    std::string handleIndex(HttpRequest&, HttpResponse&)
     {
         return "hello world";
     }
@@ -32,8 +32,8 @@ vincy是一个c++ web框架. python-flask和go语言的web框架都非常简洁�
     
 
 模板引擎的语法如下:
-    // {% for item in titles %} <a href="{{ item.url }}"> {{ item.title }}</a> {% endfor %}
+{% for item in titles %} <a href="{{ item.url }}"> {{ item.title }}</a> {% endfor %}
     
-    //我的名字是{{ myname }}
+我的名字是{{ myname }}
     
-    //我的密码是{{ mypassword }}
+我的密码是{{ mypassword }}
